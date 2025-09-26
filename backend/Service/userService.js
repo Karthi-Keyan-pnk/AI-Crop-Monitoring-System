@@ -14,12 +14,13 @@ class UserService{
         return user;
     }
 
-    async register(username,email,password){
+    async register(username,email,phonenumber,password){
         const salt = await bcrypt.genSalt(10);
         const hashedpassword = await bcrypt.hash(password,salt);
         const saveUser = await userModel({
             username,
             email,
+            phonenumber,
             password:hashedpassword,
         });
         const userdetail = saveUser.save();

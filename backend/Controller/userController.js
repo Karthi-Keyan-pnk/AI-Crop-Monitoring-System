@@ -18,9 +18,9 @@ exports.login = async (req,res)=>{
 };
 
 exports.register = async (req,res)=>{
-    const {username,email,password}=req.body;
+    const {username,email,phonenumber,password}=req.body;
     try{
-        const userRegister = await userService.register(username,email,password);
+        const userRegister = await userService.register(username,email,phonenumber,password);
         console.log("User registered sucessfully");
         return res.status(200).json({
             status:'ok',
