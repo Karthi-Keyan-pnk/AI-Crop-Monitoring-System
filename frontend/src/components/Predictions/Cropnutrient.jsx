@@ -2,18 +2,19 @@ import React, { useContext, useState, useEffect } from "react";
 import img13 from "../../assets/Img_13.jpeg";
 import "./cropnutrient.css";
 import { UserContext } from "../Hooks/UseContext";
-import axios from 'axios';
+import axios from "axios";
+
 const fast_url = import.meta.env.VITE_FAST_URL;
 
 export default function CropNutrient() {
   const { user } = useContext(UserContext);
-  const [loading, setLoading] = useState(false);
+
   const [inputImage, setInputImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [email, setEmail] = useState("");
-
 
   useEffect(() => {
     if (user) {
@@ -22,32 +23,28 @@ export default function CropNutrient() {
     }
   }, [user]);
 
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setInputImage(file);
       setResult(null);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
+  
   const clearImage = () => {
     setInputImage(null);
     setImagePreview(null);
   };
 
-  async function analyzeNutrient(e) {
+  
+  const analyzeNutrient = async (e) => {
     e.preventDefault();
     if (!inputImage) return alert("Please upload a crop image.");
-    if (!mobileNumber) return alert("Please enter your mobile number.");
-    if (!email) return alert("Please enter your email address.");
 
-
+    setLoading(true);
 
     const formData = new FormData();
     formData.append("image", inputImage);
@@ -60,15 +57,14 @@ export default function CropNutrient() {
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      setLoading(true);
       setResult(response.data);
-    } catch (error) {
+    } catch (err) {
       alert("Error analyzing crop nutrient deficiency");
-      console.error(error);
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="crop-nutrient-container">
@@ -78,6 +74,7 @@ export default function CropNutrient() {
       </div>
 
       <div className="content-wrapper">
+        
         <div className="image-preview-section">
           <h3>Uploaded Image</h3>
           <div className="image-preview-container">
@@ -85,7 +82,7 @@ export default function CropNutrient() {
               <div className="preview-with-controls">
                 <img
                   src={imagePreview}
-                  alt="Uploaded crop preview"
+                  alt="Uploaded crop"
                   className="uploaded-image"
                 />
                 <button
@@ -106,6 +103,7 @@ export default function CropNutrient() {
           </div>
         </div>
 
+        
         <form onSubmit={analyzeNutrient} className="nutrient-form">
           <div className="file-input-container">
             <label htmlFor="image-upload" className="file-input-label">
@@ -123,31 +121,32 @@ export default function CropNutrient() {
 
           <input
             type="text"
-            placeholder="Enter your mobile number"
+            placeholder="Mobile Number"
             value={mobileNumber}
-            onChange={e => setMobileNumber(e.target.value)}
             readOnly
-            required
           />
           <input
             type="email"
-            placeholder="Enter your email address"
+            placeholder="Email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
             readOnly
-            required
           />
-          <button
-            type="submit"
-            disabled={loading || !inputImage} 
-          >
-            {loading ? "Analyzing..." : "Analyze Nutrient Deficiency"}
+
+          <button type="submit" disabled={loading || !inputImage}>
+            {loading ? (
+              <>
+                <span className="button-spinner"></span> Analyzing...
+              </>
+            ) : (
+              <>
+                <span className="button-icon">🔍</span> Analyze Nutrient Deficiency
+              </>
+            )}
           </button>
-
-
         </form>
       </div>
 
+      
       {result && (
         <div className="nutrient-result">
           <h3>Analysis Results</h3>
