@@ -1,34 +1,31 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
-
+import axios from "axios";
 const Signup = () => {
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-    phonenumber: "", // keep string here (input sends string)
-  });
+  
+  const [username,setUser] = useState("");
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+  const [phonenumber,setPhone] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5001/user/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form), // phone goes as string
+      const res = await axios.post("http://localhost:5001/user/register", {
+        username,
+        email,
+        password,
+        phonenumber
       });
 
-      const data = await res.json();
-      if (res.ok) {
+      const data = res.data;
+      if (data.status == 'ok') {
         setMessage("Signup successful! Please login.");
-        navigate("/"); // redirect to login
+        navigate("/"); 
       } else {
         setMessage(data.message || "Signup failed.");
       }
@@ -47,8 +44,8 @@ const Signup = () => {
               type="text"
               name="username"
               placeholder="Username"
-              value={form.username}
-              onChange={handleChange}
+              value={username}
+              onChange={(e) =>setUser(e.target.value)}
               required
             />
           </div>
@@ -58,8 +55,8 @@ const Signup = () => {
               type="email"
               name="email"
               placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
+              value={email}
+              onChange={(e) =>setEmail(e.target.value)}
               required
             />
           </div>
@@ -69,8 +66,8 @@ const Signup = () => {
               type="number"
               name="phonenumber"
               placeholder="Phone Number"
-              value={form.phonenumber}
-              onChange={handleChange}
+              value={phonenumber}
+              onChange={(e) =>setPhone(e.target.value)}
               required
               pattern="[0-9]{10}"
               title="Enter a valid 10-digit phone number"
@@ -82,8 +79,8 @@ const Signup = () => {
               type="password"
               name="password"
               placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>

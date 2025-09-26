@@ -8,9 +8,10 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Crophealth from "./components/Predictions/Cropnutrient";
-
+import { UserProvider } from "./components/Hooks/UseContext";
 function App() {
   return (
+    <UserProvider>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
@@ -23,6 +24,7 @@ function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </UserProvider>
   );
 }
 

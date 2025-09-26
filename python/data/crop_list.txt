@@ -1,0 +1,13 @@
+blackgram
+chickpea
+cotton
+jute
+kidneybeans
+lentil
+maize
+mothbeans
+mungbean
+muskmelon
+pigeonpeas
+rice
+watermelon
