@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import img5 from "../../assets/Img_5.jpeg";
 import "./pestform.css"; // We'll create this CSS file
+const fast_url = import.meta.env.VITE_FAST_URL;
 
 export default function PestForm() {
   const [result, setResult] = useState(null);
@@ -17,7 +18,7 @@ export default function PestForm() {
     formData.append("image", file);
 
     try {
-      const response = await fetch("http://localhost:8000/predict_pest", {
+      const response = await fetch(`${fast_url}/predict_pest`, {
         method: "POST",
         body: formData,
       });

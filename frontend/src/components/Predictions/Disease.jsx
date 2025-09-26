@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import img14 from "../../assets/Img_14.jpeg";
 import "./disease.css"; // We'll create this CSS file
+const fast_url = import.meta.env.VITE_FAST_URL;
 
 export default function DiseaseDetection() {
   const [result, setResult] = useState(null);
@@ -27,7 +28,7 @@ export default function DiseaseDetection() {
     formData.append("image", inputImage);
 
     try {
-      const response = await fetch("http://localhost:8000/disease-prediction", {
+      const response = await fetch(`${fast_url}/disease-prediction`, {
         method: "POST",
         body: formData,
       });
