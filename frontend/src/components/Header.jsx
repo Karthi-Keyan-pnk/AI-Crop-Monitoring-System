@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/header.css";
+import { UserContext } from "./Hooks/UseContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const username = localStorage.getItem("username");
+  const { user, setUser } = useContext(UserContext);
 
   const handleLogout = () => {
-    localStorage.clear();
+    sessionStorage.clear();
+    setUser(null);
     navigate("/login");
   };
 
@@ -24,7 +26,7 @@ export default function Header() {
           AICI
         </Link>
 
-        <div className={`nav-links ${isMenuOpen ? 'show' : ''}`}>
+        <div className={`nav-links ${isMenuOpen ? "show" : ""}`}>
           <div className="nav-main-links">
             <Link to="/" className="nav-link" onClick={closeMobileMenu}>Home</Link>
             <Link to="/predict" className="nav-link" onClick={closeMobileMenu}>Predictions</Link>
@@ -33,11 +35,11 @@ export default function Header() {
             <Link to="/crophea" className="nav-link" onClick={closeMobileMenu}>Crop Nutrient</Link>
             <Link to="/dashboard" className="nav-link" onClick={closeMobileMenu}>Dashboard</Link>
           </div>
-          
+
           <div className="nav-auth">
-            {username ? (
+            {user ? (
               <>
-                <span className="username">Welcome, {username}</span>
+                <span className="username">Welcome, {user.username}</span>
                 <button onClick={handleLogout} className="btn btn-primary">
                   Logout
                 </button>
@@ -47,11 +49,12 @@ export default function Header() {
                 Login
               </Link>
             )}
+
           </div>
         </div>
 
-        <button 
-          className={`mobile-menu-toggle ${isMenuOpen ? 'active' : ''}`}
+        <button
+          className={`mobile-menu-toggle ${isMenuOpen ? "active" : ""}`}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle navigation menu"
         >
@@ -63,4 +66,3 @@ export default function Header() {
     </nav>
   );
 }
-
