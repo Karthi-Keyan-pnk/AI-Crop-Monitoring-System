@@ -1,4 +1,6 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+import smtplib
+from email.mime.text import MIMEText
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -186,86 +188,91 @@ async def predict_pest(image: UploadFile = File(...)):
 
 # ✅ Predict nutrient deficiency
 
-
 @app.post("/predict_nutrient_deficiency")
-async def predict_nutrient_deficiency_video(video: UploadFile = File(...)):
+async def predict_nutrient_deficiency(
+    image: UploadFile = File(...),
+    mobile_number: str = Form(...),
+    email: str = Form(...)
+):
     try:
-        import subprocess
-        # Save uploaded video temporarily
-        temp_input = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-        temp_input.write(await video.read())
-        temp_input.close()
+        # Load image from upload
+        input_image = Image.open(image.file).convert("RGB")
+        img_array = np.array(input_image)
 
-        # Generate timestamped output filename
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        temp_output_name = f"processed_video_{timestamp}.mp4"
-        temp_output_path = os.path.join(tempfile.gettempdir(), temp_output_name)
+        # Convert to grayscale
+        if len(img_array.shape) == 3:
+            img_gray = img_array.mean(axis=2)
+        else:
+            img_gray = img_array
 
-        # Open video
-        cap = cv2.VideoCapture(temp_input.name)
-        fourcc = cv2.VideoWriter_fourcc(*'avc1')  # Try H.264 for browser compatibility
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
+        # Normalize to 0-1
+        img_norm = (img_gray - img_gray.min()) / (img_gray.max() - img_gray.min())
 
-        if not out.isOpened():
-            # Fallback to mp4v if avc1 fails
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
+        # Medium-intensity "red" range in jet colormap
+        medium_red_min = 0.75
+        medium_red_max = 0.9
+        mask = (img_norm >= medium_red_min) & (img_norm <= medium_red_max)
 
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+        # Label connected regions
+        labeled, num_features = ndimage.label(mask)
+        slices = ndimage.find_objects(labeled)
 
-            # Convert frame to grayscale
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            img_norm = (gray - gray.min()) / (gray.max() - gray.min())
+        # Prepare region info and WhatsApp-style messages
+        regions = []
+        messages = []
+        for idx, sl in enumerate(slices, 1):
+            y, x = sl
+            box = {
+                "x_start": int(x.start),
+                "x_stop": int(x.stop),
+                "y_start": int(y.start),
+                "y_stop": int(y.stop)
+            }
+            regions.append(box)
+            msg = (
+                f"🟩 Region {idx}: Possible nutrient deficiency detected in area "
+                f"({box['x_start']},{box['y_start']}) to ({box['x_stop']},{box['y_stop']}). "
+                "Please inspect this region and consider soil testing or targeted fertilization."
+            )
+            messages.append(msg)
 
-            # Medium-red mask (normalized 0.75-0.9)
-            mask = (img_norm >= 0.75) & (img_norm <= 0.9)
+        # Generate WhatsApp link for user to send message
+        if messages:
+            message_text = "\n".join(messages)
+            import requests
+            whatsapp_url = f"https://wa.me/{mobile_number}?text={requests.utils.quote(message_text)}"
+        else:
+            whatsapp_url = None
 
-            # Label connected regions
-            labeled, num_features = ndimage.label(mask)
-            slices = ndimage.find_objects(labeled)
+        # Send email notification
+        if email:
+            try:
+                msg = MIMEText(message_text)
+                msg['Subject'] = "Crop Nutrient Deficiency Alert"
+                msg['From'] = "your_email@example.com"  # Replace with your sender email
+                msg['To'] = email
 
-            # Draw black boxes on original frame
-            for sl in slices:
-                y, x = sl
-                cv2.rectangle(frame, (x.start, y.start), (x.stop, y.stop), (0,0,0), 2)
+                smtp_server = "smtp.gmail.com"  # Gmail SMTP server
+                smtp_port = 587
+                smtp_user = "sanjairajaganapathi12345@gmail.com"  # Your Gmail address
+                smtp_pass = "jhywrwrmrbdxlebs"     # Gmail App Password (not your regular password)
 
-            # Write processed frame to output video
-            out.write(frame)
+                with smtplib.SMTP(smtp_server, smtp_port) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(msg['From'], [msg['To']], msg.as_string())
+            except Exception as mail_error:
+                print(f"Email send error: {mail_error}")
 
-        cap.release()
-        out.release()
-
-        # Check if output video is valid
-        if not os.path.exists(temp_output_path) or os.path.getsize(temp_output_path) == 0:
-            raise HTTPException(status_code=500, detail="Processed video is empty or corrupted.")
-
-        # Re-encode with ffmpeg to H.264 for browser compatibility
-        ffmpeg_output_path = os.path.join(tempfile.gettempdir(), f"ffmpeg_{temp_output_name}")
-        ffmpeg_cmd = [
-            "ffmpeg", "-y", "-i", temp_output_path,
-            "-c:v", "libx264", "-preset", "fast", "-pix_fmt", "yuv420p",
-            ffmpeg_output_path
-        ]
-        try:
-            subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            final_output_path = ffmpeg_output_path
-        except Exception as ffmpeg_error:
-            print("ffmpeg re-encode failed:", ffmpeg_error)
-            final_output_path = temp_output_path
-
-        # Return processed video with timestamped filename
-        return FileResponse(final_output_path, media_type='video/mp4', filename=os.path.basename(final_output_path))
-
+        return JSONResponse(content={
+            "medium_red_region_count": len(regions),
+            "regions": regions,
+            "whatsapp_messages": messages,
+            "whatsapp_url": whatsapp_url,
+            "email_sent_to": email
+        })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-    
 
 # ✅ Predict disease and provide explanation
 @app.post("/disease-prediction")
