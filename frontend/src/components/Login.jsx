@@ -3,6 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import "../styles/auth.css";
 import axios from "axios";
 import { UserContext } from './Hooks/UseContext';
+const node_url = import.meta.env.VITE_NODE_URL;
+
 const Login = () => {
   const { setUser } = useContext(UserContext);
   const [email, setEmail] = useState("");
@@ -19,19 +21,22 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5001/user/login", {
+      const res = await axios.post(`${node_url}/user/login`, {
         email,
         password,
       });
+
       const data = res.data;
 
       if (data.status === "ok") {
-        const username = data.user.username; 
-        const userData = { username };
+        const userData = {
+          username: data.user.username,
+          email: data.user.email,
+          phonenumber: data.user.phonenumber
+        };
         setUser(userData);
         setMessage("Login successful!");
         navigate("/");
-
       }
       else {
         setMessage(data.message || "Login failed.");

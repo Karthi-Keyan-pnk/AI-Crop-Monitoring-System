@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import img6 from "../../assets/Img_6.jpeg";
 import "./cropform.css";
-
+import axios from 'axios';
+const fast_url = import.meta.env.VITE_FAST_URL;
+const node_url = import.meta.env.VITE_NODE_URL;
 export default function CropForm() {
   const [loading, setLoading] = useState(false);
   const [climate, setClimate] = useState({
@@ -13,7 +15,6 @@ export default function CropForm() {
   });
   const [climateLoading, setClimateLoading] = useState(true);
 
-  // Auto-fetch climate (from backend only)
   useEffect(() => {
     if (!navigator.geolocation) {
       console.error("❌ Geolocation not supported");
@@ -27,18 +28,18 @@ export default function CropForm() {
         console.log("📍 Got location:", latitude, longitude);
 
         try {
-          const res = await fetch(
-            `http://localhost:5001/climate/get_climate?lat=${latitude}&lon=${longitude}`
+          const res = await axios.get(
+            `${node_url}/climate/get_climate?lat=${latitude}&lon=${longitude}`
           );
-          const data = await res.json();
+          const data = res.data;
           console.log("🌡 Climate API response:", data);
 
           setClimate({
             temperature: data.temperature || "",
             humidity: data.humidity || "",
-            season: data.season || "", // ✅ directly use backend season
-            date: data.date || "",     // ✅ directly use backend date
-            time: data.time || "",     // ✅ directly use backend time
+            season: data.season || "", 
+            date: data.date || "",     
+            time: data.time || "",     
           });
         } catch (err) {
           console.error("❌ Fetch error:", err);
@@ -53,7 +54,7 @@ export default function CropForm() {
     );
   }, []);
 
-  // Submit form
+  
   async function predictCrop(e) {
     e.preventDefault();
     setLoading(true);
@@ -70,11 +71,10 @@ export default function CropForm() {
     };
 
     try {
-      const res = await fetch("http://localhost:8000/predict_crop", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await axios.post(`${fast_url}/predict_crop`, 
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
       if (!res.ok) {
         const error = await res.json();

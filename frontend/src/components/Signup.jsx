@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import axios from "axios";
+const node_url = import.meta.env.VITE_NODE_URL;
+
 const Signup = () => {
   
   const [username,setUser] = useState("");
@@ -15,7 +17,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5001/user/register", {
+      const res = await axios.post(`${node_url}/user/register`, {
         username,
         email,
         password,
