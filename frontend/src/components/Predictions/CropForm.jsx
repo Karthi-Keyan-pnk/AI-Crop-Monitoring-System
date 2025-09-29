@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import img6 from "../../assets/Img_6.jpeg";
 import "./cropform.css";
-import axios from 'axios';
+import axios from "axios";
+
 const fast_url = import.meta.env.VITE_FAST_URL;
 const node_url = import.meta.env.VITE_NODE_URL;
+
 export default function CropForm() {
   const [loading, setLoading] = useState(false);
   const [climate, setClimate] = useState({
@@ -15,6 +17,7 @@ export default function CropForm() {
   });
   const [climateLoading, setClimateLoading] = useState(true);
 
+  // Fetch climate data
   useEffect(() => {
     if (!navigator.geolocation) {
       console.error("❌ Geolocation not supported");
@@ -25,21 +28,18 @@ export default function CropForm() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        console.log("📍 Got location:", latitude, longitude);
-
         try {
           const res = await axios.get(
             `${node_url}/climate/get_climate?lat=${latitude}&lon=${longitude}`
           );
           const data = res.data;
-          console.log("🌡 Climate API response:", data);
 
           setClimate({
             temperature: data.temperature || "",
             humidity: data.humidity || "",
-            season: data.season || "", 
-            date: data.date || "",     
-            time: data.time || "",     
+            season: data.season || "",
+            date: data.date || "",
+            time: data.time || "",
           });
         } catch (err) {
           console.error("❌ Fetch error:", err);
@@ -54,8 +54,8 @@ export default function CropForm() {
     );
   }, []);
 
-  
-  async function predictCrop(e) {
+  // Predict crop handler
+  const predictCrop = async (e) => {
     e.preventDefault();
     setLoading(true);
 
@@ -71,32 +71,24 @@ export default function CropForm() {
     };
 
     try {
-      const res = await axios.post(`${fast_url}/predict_crop`, 
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+      const res = await axios.post(`${fast_url}/predict_crop`, payload);
+      const data = res.data;
+      alert(
+        `✅ Water Needed: ${data.water_required} L/ha\n📅 Days until Harvest: ${data.days_until_harvest}`
       );
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`❌ Error: ${error.detail}`);
-      } else {
-        const data = await res.json();
-        alert(
-          `✅ Water Needed: ${data.water_required} L/ha\n📅 Days until Harvest: ${data.days_until_harvest}`
-        );
-      }
     } catch (err) {
       console.error("❌ Prediction error:", err);
+      alert("Error predicting crop. Check console for details.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="crop-form-container">
       <div className="crop-form-card">
         <div className="form-image-section">
-          <img src={img6} alt="Agricultural field with crops" className="form-image" />
+          <img src={img6} alt="Agricultural field" className="form-image" />
           <div className="image-overlay">
             <h2>🌱 Harvest & Water Intelligence</h2>
             <p>Get accurate predictions for your crop water needs and harvest timing</p>
@@ -132,28 +124,24 @@ export default function CropForm() {
                   <label>Season</label>
                   <div className="readonly-field">{climate.season}</div>
                 </div>
-
                 <div className="form-group">
                   <label>Date</label>
                   <div className="readonly-field">{climate.date}</div>
                 </div>
-
                 <div className="form-group">
                   <label>Time</label>
                   <div className="readonly-field">{climate.time}</div>
                 </div>
-
                 <div className="form-group">
                   <label>Temperature</label>
                   <div className="readonly-field">
-                    {climate.temperature !== "" ? `${climate.temperature} °C` : "No data"}
+                    {climate.temperature ? `${climate.temperature} °C` : "No data"}
                   </div>
                 </div>
-
                 <div className="form-group">
                   <label>Humidity</label>
                   <div className="readonly-field">
-                    {climate.humidity !== "" ? `${climate.humidity} %` : "No data"}
+                    {climate.humidity ? `${climate.humidity} %` : "No data"}
                   </div>
                 </div>
               </div>
@@ -192,13 +180,11 @@ export default function CropForm() {
               >
                 {loading ? (
                   <>
-                    <span className="button-spinner"></span>
-                    Predicting...
+                    <span className="button-spinner"></span> Predicting...
                   </>
                 ) : (
                   <>
-                    <span className="button-icon">🔍</span>
-                    Predict Now
+                    <span className="button-icon">🔍</span> Predict Now
                   </>
                 )}
               </button>

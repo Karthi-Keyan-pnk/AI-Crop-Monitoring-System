@@ -10,37 +10,32 @@ export default function DiseaseDetection() {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setInputImage(file);
-      setSelectedImage(URL.createObjectURL(file));
-      setResult(null);
-    }
+    setInputImage(null);
+    setSelectedImage(null);
+    setResult(null);
   };
 
   async function predictDisease(e) {
     e.preventDefault();
     if (!inputImage) return alert("Upload a crop disease image.");
-    
+
     setLoading(true);
 
     const formData = new FormData();
     formData.append("image", inputImage);
 
     try {
-      const response = await fetch(`${fast_url}/disease-prediction`, {
-        method: "POST",
-        body: formData,
+      const res = await axios.post(`${fast_url}/disease-prediction`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
-
-      const data = await response.json();
-      setResult(data);
+      setResult(res.data);
     } catch (error) {
       alert("Error detecting disease");
       console.error(error);
     } finally {
       setLoading(false);
     }
+
   }
 
   return (
@@ -53,13 +48,13 @@ export default function DiseaseDetection() {
             <p>Identify diseases and get detailed explanations</p>
           </div>
         </div>
-        
+
         <div className="form-content-section">
           <div className="form-header">
             <h3>Crop Disease Detection & Explanation</h3>
             <p>Upload an image of your crop to detect diseases and get detailed information</p>
           </div>
-          
+
           <form onSubmit={predictDisease} className="disease-form">
             <div className="file-upload-area">
               <label htmlFor="disease_image" className="file-upload-label">
@@ -67,18 +62,18 @@ export default function DiseaseDetection() {
                 <div className="upload-text">
                   {selectedImage ? "Image Selected" : "Choose a crop image"}
                 </div>
-                <input 
-                  type="file" 
-                  id="disease_image" 
-                  name="disease_image" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  id="disease_image"
+                  name="disease_image"
+                  accept="image/*"
                   onChange={handleImageChange}
-                  required 
+                  required
                   className="file-input"
                 />
               </label>
             </div>
-            
+
             {selectedImage && (
               <div className="image-preview-card">
                 <h4>Image Preview</h4>
@@ -87,9 +82,9 @@ export default function DiseaseDetection() {
                 </div>
               </div>
             )}
-            
-            <button 
-              type="submit" 
+
+            <button
+              type="submit"
               className="detect-button"
               disabled={loading || !selectedImage}
             >
@@ -106,7 +101,7 @@ export default function DiseaseDetection() {
               )}
             </button>
           </form>
-          
+
           {result && (
             <div className="disease-result">
               <h4>Detection Results</h4>
