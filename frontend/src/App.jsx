@@ -10,6 +10,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Crophealth from "./components/Predictions/Cropnutrient";
 import { UserProvider } from "./components/Hooks/UseContext";
 import Youtube from './components/Youtube';
+import Kaggle from './components/Kaggle';
+import Github from './components/Github';
+import Plantix from './components/Plantix';
+import Plantcare from './components/Plantcare';
 function App() {
   return (
     <UserProvider>
@@ -25,6 +29,10 @@ function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/demo-video" element={<Youtube/>} />
+      <Route path="/kaggle-ref" element={<Kaggle/>} />
+      <Route path="/github-url" element={<Github/>} />
+      <Route path="/exist-1" element={<Plantix/>} />
+      <Route path="/exist-2" element={<Plantcare/>} />
     </Routes>
     </UserProvider>
   );
