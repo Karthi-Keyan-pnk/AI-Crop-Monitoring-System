@@ -9,6 +9,7 @@ import Signup from "./components/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Crophealth from "./components/Predictions/Cropnutrient";
 import { UserProvider } from "./components/Hooks/UseContext";
+import Youtube from './components/Youtube';
 function App() {
   return (
     <UserProvider>
@@ -23,6 +24,7 @@ function App() {
         <Route path="crophea" element={<Crophealth />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/demo-video" element={<Youtube/>} />
     </Routes>
     </UserProvider>
   );
