@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form , Request
 import smtplib
 from email.mime.text import MIMEText
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +24,7 @@ import tempfile
 import os
 import cv2
 from fastapi.responses import FileResponse
+import json
 
 # ========== INIT APP ==========
 app = FastAPI()
@@ -91,6 +92,14 @@ try:
         35: "Tomato healthy"
     }
 
+    with open(os.path.join(DATA_DIR, "rules.json"), "r") as f:
+        RULES_DATA = json.load(f)
+
+    CHATBOT_INSTRUCTIONS = f"You are the official chatbot for {RULES_DATA['site_name']}.\n"
+    for rule in RULES_DATA["rules"]:
+        CHATBOT_INSTRUCTIONS += f"- {rule}\n"
+
+
     # Initialize Gemini AI model for disease explanation
     load_dotenv()
     API_KEY = os.getenv("API_KEY")
@@ -113,9 +122,6 @@ class CropRequest(BaseModel):
     avg_water: float
 
 # ========== ROUTES ==========
-
-import requests
-from fastapi import Query
 
 load_dotenv()
 
@@ -311,6 +317,34 @@ def chat_bot(dis):
     response = chat.send_message(query)
     result = response.text
     return result
+
+@app.post("/chatbot")
+async def chatbot_endpoint(req: Request):
+    try:
+        body = await req.json()
+        user_message = body.get("message", "")
+
+        # Human-friendly prompt
+        prompt = f"""
+You are Agro, an AI assistant for the AI Crop Monitoring System.
+Follow these rules:
+{chr(10).join(RULES_DATA['rules'])}
+
+Respond in a friendly, human-like, conversational tone.
+Use bullet points or numbered lists if listing features or steps.
+Keep answers concise, 2-5 sentences max.
+Do not repeat your name in every message.
+If user asks for something outside your scope, politely tell them.
+
+User: {user_message}
+Agro:
+"""
+
+        response = aimodel.generate_content(prompt)
+        return JSONResponse(content={"reply": response.text.strip()})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ========== RUN ==========
 if __name__ == "__main__":
