@@ -14,26 +14,36 @@ import Kaggle from './components/Kaggle';
 import Github from './components/Github';
 import Plantix from './components/Plantix';
 import Plantcare from './components/Plantcare';
+import Dashboard from "./components/Dashboard";
+import MapPage from "./components/MapPage"; 
+
 function App() {
   return (
     <UserProvider>
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<Hero />} />
-        <Route path="predict" element={<Predictions />} />
-        <Route path="pest" element={<PestAnalysis />} />
-        <Route path="disease" element={<DiseaseDetection />} />
-        <Route path="crophea" element={<Crophealth />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-      <Route path="/demo-video" element={<Youtube/>} />
-      <Route path="/kaggle-ref" element={<Kaggle/>} />
-      <Route path="/github-url" element={<Github/>} />
-      <Route path="/exist-1" element={<Plantix/>} />
-      <Route path="/exist-2" element={<Plantcare/>} />
-    </Routes>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+       
+        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route index element={<Hero />} />
+          <Route path="predict" element={<Predictions />} />
+          <Route path="pest" element={<PestAnalysis />} />
+          <Route path="disease" element={<DiseaseDetection />} />
+          <Route path="crophea" element={<Crophealth />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="map" element={<MapPage />} /> 
+        </Route>
+
+       
+        <Route path="/demo-video" element={<Youtube />} />
+        <Route path="/kaggle-ref" element={<Kaggle />} />
+        <Route path="/github-url" element={<Github />} />
+        <Route path="/exist-1" element={<Plantix />} />
+        <Route path="/exist-2" element={<Plantcare />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </UserProvider>
   );
 }
