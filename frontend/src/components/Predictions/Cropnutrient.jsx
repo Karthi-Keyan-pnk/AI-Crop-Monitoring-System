@@ -3,6 +3,7 @@ import img13 from "../../assets/Img_13.jpeg";
 import "./cropnutrient.css";
 import { UserContext } from "../Hooks/UseContext";
 import axios from "axios";
+import { getUserId } from "../Hooks/userUtils";
 
 const fast_url = import.meta.env.VITE_FAST_URL;
 
@@ -52,15 +53,26 @@ export default function CropNutrient() {
     formData.append("email", email);
 
     try {
+      const userId = getUserId();
       const response = await axios.post(
         `${fast_url}/predict_nutrient_deficiency`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { 
+          headers: { 
+            'user-id': userId || ''
+          } 
+        }
       );
       setResult(response.data);
     } catch (err) {
-      alert("Error analyzing crop nutrient deficiency");
       console.error(err);
+      if (err.response?.status === 401) {
+        alert("Please log in again to continue using the nutrient analysis features.");
+      } else if (err.response?.status === 403) {
+        alert("You don't have permission to access this feature. Please contact support.");
+      } else {
+        alert("Error analyzing crop nutrient deficiency. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }

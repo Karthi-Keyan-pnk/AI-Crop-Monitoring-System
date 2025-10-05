@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import img14 from "../../assets/Img_14.jpeg";
 import "./disease.css"; // We'll create this CSS file
+import axios from "axios";
+import { getUserId } from "../Hooks/userUtils";
 const fast_url = import.meta.env.VITE_FAST_URL;
 
 export default function DiseaseDetection() {
@@ -10,9 +12,16 @@ export default function DiseaseDetection() {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const handleImageChange = (e) => {
-    setInputImage(null);
-    setSelectedImage(null);
-    setResult(null);
+    const file = e.target.files[0];
+    if (file) {
+      setInputImage(file);
+      setSelectedImage(URL.createObjectURL(file));
+      setResult(null);
+    } else {
+      setInputImage(null);
+      setSelectedImage(null);
+      setResult(null);
+    }
   };
 
   async function predictDisease(e) {
@@ -25,13 +34,22 @@ export default function DiseaseDetection() {
     formData.append("image", inputImage);
 
     try {
+      const userId = getUserId();
       const res = await axios.post(`${fast_url}/disease-prediction`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: {
+          'user-id': userId || ''
+        }
       });
       setResult(res.data);
     } catch (error) {
-      alert("Error detecting disease");
       console.error(error);
+      if (error.response?.status === 401) {
+        alert("Please log in again to continue using the disease detection features.");
+      } else if (error.response?.status === 403) {
+        alert("You don't have permission to access this feature. Please contact support.");
+      } else {
+        alert("Error detecting disease. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
