@@ -30,6 +30,7 @@ const Login = () => {
 
       if (data.status === "ok") {
         const userData = {
+          _id: data.user._id,
           username: data.user.username,
           email: data.user.email,
           phonenumber: data.user.phonenumber

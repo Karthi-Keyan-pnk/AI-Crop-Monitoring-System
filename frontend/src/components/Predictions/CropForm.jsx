@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import img6 from "../../assets/Img_6.jpeg";
 import "./cropform.css";
 import axios from "axios";
+import { getUserId } from "../Hooks/userUtils";
 
 const fast_url = import.meta.env.VITE_FAST_URL;
 const node_url = import.meta.env.VITE_NODE_URL;
@@ -71,14 +72,25 @@ export default function CropForm() {
     };
 
     try {
-      const res = await axios.post(`${fast_url}/predict_crop`, payload);
+      const userId = getUserId();
+      const res = await axios.post(`${fast_url}/predict_crop`, payload, {
+        headers: {
+          'user-id': userId || ''
+        }
+      });
       const data = res.data;
       alert(
         `✅ Water Needed: ${data.water_required} L/ha\n📅 Days until Harvest: ${data.days_until_harvest}`
       );
     } catch (err) {
       console.error("❌ Prediction error:", err);
-      alert("Error predicting crop. Check console for details.");
+      if (err.response?.status === 401) {
+        alert("Please log in again to continue using the prediction features.");
+      } else if (err.response?.status === 403) {
+        alert("You don't have permission to access this feature. Please contact support.");
+      } else {
+        alert("Error predicting crop. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }

@@ -11,11 +11,11 @@ async def predict_nutrient_deficiency(
     image: UploadFile = File(...),
     mobile_number: str = Form(...),
     email: str = Form(...),
-    x_user_id: str | None = Header(default=None),
+    user_id: str | None = Header(default=None),
 ):
     try:
         image_bytes = await image.read()
-        result = await nutrient_predict(image_bytes, mobile_number, email, user_id=x_user_id)
+        result = await nutrient_predict(image_bytes, mobile_number, email, user_id=user_id)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
