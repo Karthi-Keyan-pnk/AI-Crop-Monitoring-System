@@ -9,11 +9,11 @@ import Signup from "./components/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Crophealth from "./components/Predictions/Cropnutrient";
 import { UserProvider } from "./components/Hooks/UseContext";
-import Youtube from './components/Youtube';
-import Kaggle from './components/Kaggle';
-import Github from './components/Github';
-import Plantix from './components/Plantix';
-import Plantcare from './components/Plantcare';
+import Youtube from './components/URL/Youtube';
+import Kaggle from './components/URL/Kaggle';
+import Github from './components/URL/Github';
+import Plantix from './components/URL/Plantix';
+import Plantcare from './components/URL/Plantcare';
 import Dashboard from "./components/Dashboard";
 import MapPage from "./components/MapPage"; 
 
