@@ -4,12 +4,12 @@ const YoutubeRedirect = () => {
 
 
   useEffect(() => {
-    window.location.href = `https://youtu.be/8FfhJK1HJME?si=9wgIr1vFvVlcbXaz`;
+    window.location.href = `https://drive.google.com/file/d/1DrujLuhAIxXsu0o57sn6hLygPqiZrPpo/view?usp=sharing`;
   }, []);
 
   return (
     <div>
-      <p>Redirecting to YouTube...</p>
+      <p>Redirecting to Google Drive...</p>
     </div>
   );
 };

@@ -4,7 +4,7 @@ const Kaggle = () => {
 
 
   useEffect(() => {
-    window.location.href = `https://www.kaggle.com/datasets/vijayakanthm23alr121/aerial`;
+    window.location.href = `https://www.kaggle.com/datasets/sanjai2005/agri-land-drone-image-dataset`;
   }, []);
 
   return (
