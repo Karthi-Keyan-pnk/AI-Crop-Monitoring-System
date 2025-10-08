@@ -12,3 +12,6 @@ google-generativeai
 python-dotenv
 opencv-python
 scipy
+pydantic-settings
+motor
+pydantic[email]

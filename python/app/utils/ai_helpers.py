@@ -8,6 +8,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from PIL import Image
+import cv2
 import torch
 import torch.nn as nn
 from torchvision import models, transforms
@@ -100,32 +101,33 @@ def pest_predict_from_bytes(image_bytes: bytes) -> tuple[str, str]:
 # ---------------------- TensorFlow / Disease model ----------------------
 @lru_cache
 def get_disease_model_and_labels():
-    model = tf.keras.models.load_model(MODELS_DIR / "CNN_model.h5")
-    labels = {
-        0: "Apple Apple_scab", 1: "Apple Black rot", 2: "Apple Cedar_apple_rust", 3: "Apple healthy",
-        4: "Blueberry healthy", 5: "Cherry (including sour) Powdery mildew", 6: "Cherry (including sour) healthy",
-        7: "Corn (maize) Cercospora leaf spot Gray leaf spot", 8: "Corn (maize) Common rust", 9: "Corn (maize) Northern Leaf Blight",
-        10: "Corn (maize) healthy", 11: "Grape Black rot", 12: "Grape Leaf blight (Isariopsis Leaf Spot)", 13: "Grape healthy",
-        14: "Orange Haunglongbing (Citrus greening)", 15: "Peach Bacterial spot", 16: "Peach healthy",
-        17: "Pepper (bell) Bacterial spot", 18: "Pepper (bell) healthy", 19: "Potato Early blight",
-        20: "Potato Late blight", 21: "Potato healthy", 22: "Raspberry healthy", 23: "Soybean healthy",
-        24: "Squash Powdery mildew", 25: "Strawberry Leaf scorch", 26: "Strawberry healthy",
-        27: "Tomato Bacterial spot", 28: "Tomato Late blight", 29: "Tomato Leaf Mold",
-        30: "Tomato Septoria leaf spot", 31: "Tomato Spider mites (Two-spotted spider mite)",
-        32: "Tomato Target Spot", 33: "Tomato Yellow Leaf Curl Virus", 34: "Tomato Mosaic Virus",
-        35: "Tomato healthy"
-    }
-    return model, labels
+    model = tf.keras.models.load_model(MODELS_DIR / "plant_disease_model.h5")
+    CLASS_NAMES = ('Tomato-Bacterial_spot', 'Potato-Early blight', 'Corn-Common_rust')
+    return model, CLASS_NAMES
 
 
 def disease_predict_from_bytes(image_bytes: bytes) -> str:
-    model, labels = get_disease_model_and_labels()
-    img = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize((128, 128))
-    arr = (np.array(img) / 255.0).astype("float32")
-    arr = np.expand_dims(arr, axis=0)
-    pred = model.predict(arr)
-    pred_class = int(np.argmax(pred))
-    return labels.get(pred_class, "Unknown Disease")
+    model, CLASS_NAMES = get_disease_model_and_labels()
+
+    # Convert bytes to cv2 image like in user's snippet
+    file_bytes = np.asarray(bytearray(image_bytes), dtype=np.uint8)
+    opencv_image = cv2.imdecode(file_bytes, 1)
+
+    # Resize image to 256x256 as in user's snippet
+    opencv_image = cv2.resize(opencv_image, (256, 256))
+
+    # Convert image to 4 dimensions as in user's snippet
+    opencv_image = opencv_image.reshape(1, 256, 256, 3)
+
+    # Make prediction
+    Y_pred = model.predict(opencv_image)
+    result_index = np.argmax(Y_pred)
+    result = CLASS_NAMES[result_index]
+
+    # Format output like user's snippet: "This is [plant_type] leaf with [disease]"
+    plant_type = result.split('-')[0]
+    disease = result.split('-')[1]
+    return f"This is {plant_type} leaf with {disease}"
 
 
 # ---------------------- Rules / Chatbot helpers ----------------------

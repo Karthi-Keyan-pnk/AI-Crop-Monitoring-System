@@ -8,12 +8,11 @@ router = APIRouter(prefix="", tags=["crop"])
 
 
 @router.post("/predict_crop", response_model=CropResponse)
-async def predict_crop(request: CropRequest, x_user_id: str | None = Header(default=None)):
+async def predict_crop(request: CropRequest, user_id: str | None = Header(default=None)):
     try:
-        result = await crop_predict(request, user_id=x_user_id)
+        result = await crop_predict(request, user_id=user_id)
         return result
     except ValueError as ve:
-        # Provide helpful guidance on valid labels
         crops = list(get_crop_encoder().classes_)
         seasons = list(get_season_encoder().classes_)
         raise HTTPException(status_code=400, detail={

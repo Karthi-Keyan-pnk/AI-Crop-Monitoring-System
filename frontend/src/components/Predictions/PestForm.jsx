@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import img5 from "../../assets/Img_5.jpeg";
 import "./pestform.css";
 import axios from "axios";
+import { getUserId } from "../Hooks/userUtils";
 
 const fast_url = import.meta.env.VITE_FAST_URL;
 
@@ -40,13 +41,22 @@ export default function PestForm() {
     formData.append("image", inputImage);
 
     try {
+      const userId = getUserId();
       const res = await axios.post(`${fast_url}/predict_pest`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          'user-id': userId || ''
+        }
       });
       setResult(res.data);
     } catch (err) {
       console.error(err);
-      alert("Error detecting pest.");
+      if (err.response?.status === 401) {
+        alert("Please log in again to continue using the pest detection features.");
+      } else if (err.response?.status === 403) {
+        alert("You don't have permission to access this feature. Please contact support.");
+      } else {
+        alert("Error detecting pest. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
