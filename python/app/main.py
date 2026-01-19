@@ -21,6 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+async def health_check():
+    return {"status": "Running"}
+
 # Routers
 app.include_router(crop_router)
 app.include_router(pest_router)
